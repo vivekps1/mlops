@@ -1,0 +1,56 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+import os
+import yaml
+
+
+
+def load_data(data_url:str) -> pd.DataFrame: 
+    try: 
+        df = pd.read_csv(data_url)
+        return df
+
+    except pd.errors as pde: 
+        print(pde)
+        raise
+    except Exception as e: 
+        print(e)
+        raise
+
+def preprocess_data(df:pd.DataFrame) -> pd.DataFrame: 
+    try: 
+        df.drop(columns=['tweet_id'],inplace=True)
+        final_df = df[df['sentiment'].isin(['happiness','sadness'])]
+        final_df['sentiment'].replace({'happiness':1, 'sadness':0},inplace=True)
+        return final_df 
+    except KeyError as ke: 
+        print(f"Error: Missing column {ke} from the data")
+        raise
+    except Exception as e: 
+        print(e)
+        raise
+
+
+def save_data(train_data:pd.DataFrame, test_data:pd.DataFrame, data_path:str) -> None: 
+    try:
+        data_path = os.path.join(data_path, 'raw') 
+        os.makedirs(data_path, exist_ok=True)
+        train_data.to_csv(os.path.join(data_path, 'train_data.csv'), index=False)
+        test_data.to_csv(os.path.join(data_path, 'test_data.csv'), index=False)
+    except Exception as e: 
+        print(f"Unexpected error occured \n {e}")
+
+
+def main(): 
+    try: 
+        data_url = 'https://raw.githubusercontent.com/entbappy/Branching-tutorial/refs/heads/master/tweet_emotions.csv'
+        df = load_data(data_url)
+        final_df = preprocess_data(df)
+        train_data, test_data = train_test_split(final_df, test_size=0.2, random_state=42)
+        save_data(train_data, test_data)
+    except Exception as e: 
+        print(f"Unexpected Error Occured \n\n {e}")
+
+if __name__ == "__main__" : 
+    main()
